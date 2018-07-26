@@ -91,7 +91,9 @@ abstract public class BeanCopier
         }
 
         public BeanCopier create() {
+            //生成唯一的key
             Object key = KEY_FACTORY.newInstance(source.getName(), target.getName(), useConverter);
+            //生成干活的class
             return (BeanCopier)super.create(key);
         }
 
@@ -99,18 +101,20 @@ abstract public class BeanCopier
             Type sourceType = Type.getType(source);
             Type targetType = Type.getType(target);
             ClassEmitter ce = new ClassEmitter(v);
+            // 创建class
             ce.begin_class(Constants.V1_2,
                            Constants.ACC_PUBLIC,
                            getClassName(),
                            BEAN_COPIER,
                            null,
                            Constants.SOURCE_FILE);
-
+            // 生成默认构造函数
             EmitUtils.null_constructor(ce);
+            // [BEGIN COPY METHOD]生成copy方法
             CodeEmitter e = ce.begin_method(Constants.ACC_PUBLIC, COPY, null);
             PropertyDescriptor[] getters = ReflectUtils.getBeanGetters(source);
             PropertyDescriptor[] setters = ReflectUtils.getBeanSetters(target);
-
+            // names可根据属性名查找对应的getter方法
             Map names = new HashMap();
             for (int i = 0; i < getters.length; i++) {
                 names.put(getters[i].getName(), getters[i]);
@@ -130,6 +134,7 @@ abstract public class BeanCopier
                 e.load_arg(0);
                 e.checkcast(sourceType);
             }
+            // 为每个属性生成赋值语句
             for (int i = 0; i < setters.length; i++) {
                 PropertyDescriptor setter = setters[i];
                 PropertyDescriptor getter = (PropertyDescriptor)names.get(setter.getName());
@@ -157,6 +162,7 @@ abstract public class BeanCopier
             }
             e.return_value();
             e.end_method();
+            //[END COPY METHOD]
             ce.end_class();
         }
 

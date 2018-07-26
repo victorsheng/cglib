@@ -90,6 +90,7 @@ implements ClassGenerator
             Function<AbstractClassGenerator, Object> load =
                     new Function<AbstractClassGenerator, Object>() {
                         public Object apply(AbstractClassGenerator gen) {
+                            //生成嗲吗
                             Class klass = gen.generate(ClassLoaderData.this);
                             return gen.wrapCachedClass(klass);
                         }
@@ -273,14 +274,18 @@ implements ClassGenerator
     protected Object create(Object key) {
         try {
             ClassLoader loader = getClassLoader();
+            //按照ClassLoader 进行分区的缓存
             Map<ClassLoader, ClassLoaderData> cache = CACHE;
             ClassLoaderData data = cache.get(loader);
+            /** 1.尝试加载缓存 **/
+            // 如果缓存不存在,则新建空的缓存
             if (data == null) {
                 synchronized (AbstractClassGenerator.class) {
                     cache = CACHE;
                     data = cache.get(loader);
                     if (data == null) {
                         Map<ClassLoader, ClassLoaderData> newCache = new WeakHashMap<ClassLoader, ClassLoaderData>(cache);
+                        //开始生成代码
                         data = new ClassLoaderData(loader);
                         newCache.put(loader, data);
                         CACHE = newCache;
@@ -326,9 +331,13 @@ implements ClassGenerator
                     // ignore
                 }
             }
+            //生成字节数组
+            //将执行的权利交给子类
             byte[] b = strategy.generate(this);
             String className = ClassNameReader.getClassName(new ClassReader(b));
             ProtectionDomain protectionDomain = getProtectionDomain();
+
+            //定义class
             synchronized (classLoader) { // just in case
                 if (protectionDomain == null) {
                     gen = ReflectUtils.defineClass(className, b, classLoader);

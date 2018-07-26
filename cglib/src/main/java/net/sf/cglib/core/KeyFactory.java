@@ -239,22 +239,24 @@ abstract public class KeyFactory {
 
         public void generateClass(ClassVisitor v) {
             ClassEmitter ce = new ClassEmitter(v);
-            
+            // 对定义key工厂类结构的接口进行判断，判断该接口是否只有newInstance一个方法，newInstance的返回值是否为Object
             Method newInstance = ReflectUtils.findNewInstance(keyInterface);
             if (!newInstance.getReturnType().equals(Object.class)) {
                 throw new IllegalArgumentException("newInstance method must return Object");
             }
-
+            // 获取newInstance的入参类型，此处使用ASM的Type来定义
             Type[] parameterTypes = TypeUtils.getTypes(newInstance.getParameterTypes());
+            // 创建class
             ce.begin_class(Constants.V1_2,
                            Constants.ACC_PUBLIC,
                            getClassName(),
                            KEY_FACTORY,
                            new Type[]{ Type.getType(keyInterface) },
                            Constants.SOURCE_FILE);
+            //生成默认构造函数
             EmitUtils.null_constructor(ce);
             EmitUtils.factory_method(ce, ReflectUtils.getSignature(newInstance));
-
+            //生成有参构造方法
             int seed = 0;
             CodeEmitter e = ce.begin_method(Constants.ACC_PUBLIC,
                                             TypeUtils.parseConstructor(parameterTypes),
@@ -269,6 +271,7 @@ abstract public class KeyFactory {
                 for (FieldTypeCustomizer customizer : fieldTypeCustomizers) {
                     fieldType = customizer.getOutType(i, fieldType);
                 }
+                //为每一个入参生成一个相同类型的类字段
                 seed += fieldType.hashCode();
                 ce.declare_field(Constants.ACC_PRIVATE | Constants.ACC_FINAL,
                                  getFieldName(i),
@@ -285,6 +288,7 @@ abstract public class KeyFactory {
             e.end_method();
             
             // hash code
+            //生成hashCode函数
             e = ce.begin_method(Constants.ACC_PUBLIC, HASH_CODE, null);
             int hc = (constant != 0) ? constant : PRIMES[(int)(Math.abs(seed) % PRIMES.length)];
             int hm = (multiplier != 0) ? multiplier : PRIMES[(int)(Math.abs(seed * 13) % PRIMES.length)];
@@ -298,6 +302,7 @@ abstract public class KeyFactory {
             e.end_method();
 
             // equals
+            //生成equals函数，在equals函数中对每个入参都进行判断
             e = ce.begin_method(Constants.ACC_PUBLIC, EQUALS, null);
             Label fail = e.make_label();
             e.load_arg(0);

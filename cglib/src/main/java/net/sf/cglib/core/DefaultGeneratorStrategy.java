@@ -22,6 +22,7 @@ public class DefaultGeneratorStrategy implements GeneratorStrategy {
     
     public byte[] generate(ClassGenerator cg) throws Exception {
         DebuggingClassWriter cw = getClassVisitor();
+        //子类执行
         transform(cg).generateClass(cw);
         return transform(cw.toByteArray());
     }
