@@ -90,8 +90,9 @@ implements ClassGenerator
             Function<AbstractClassGenerator, Object> load =
                     new Function<AbstractClassGenerator, Object>() {
                         public Object apply(AbstractClassGenerator gen) {
-                            //生成嗲吗
+                            //生成class
                             Class klass = gen.generate(ClassLoaderData.this);
+                            //放入缓存
                             return gen.wrapCachedClass(klass);
                         }
                     };
@@ -114,6 +115,7 @@ implements ClassGenerator
             if (!useCache) {
               return gen.generate(ClassLoaderData.this);
             } else {
+              //从cache中读取
               Object cachedValue = generatedClasses.get(gen);
               return gen.unwrapCachedValue(cachedValue);
             }
@@ -213,7 +215,7 @@ implements ClassGenerator
     public boolean getAttemptLoad() {
         return attemptLoad;
     }
-    
+
     /**
      * Set the strategy to use to create the bytecode from this generator.
      * By default an instance of {@see DefaultGeneratorStrategy} is used.
@@ -271,9 +273,15 @@ implements ClassGenerator
     	return null;
     }
 
+    /**
+     * 根据生成的key获取 干活的对象
+     * @param key
+     * @return
+     */
     protected Object create(Object key) {
         try {
             ClassLoader loader = getClassLoader();
+            //CACHE: 静态的缓存
             //按照ClassLoader 进行分区的缓存
             Map<ClassLoader, ClassLoaderData> cache = CACHE;
             ClassLoaderData data = cache.get(loader);
@@ -281,7 +289,7 @@ implements ClassGenerator
             // 如果缓存不存在,则新建空的缓存
             if (data == null) {
                 synchronized (AbstractClassGenerator.class) {
-                    cache = CACHE;
+                    cache = cache;
                     data = cache.get(loader);
                     if (data == null) {
                         Map<ClassLoader, ClassLoaderData> newCache = new WeakHashMap<ClassLoader, ClassLoaderData>(cache);
@@ -293,10 +301,14 @@ implements ClassGenerator
                 }
             }
             this.key = key;
+            //获取获ClassLoaderData后,取对象,也有缓存
+            //模板方法
             Object obj = data.get(this, getUseCache());
             if (obj instanceof Class) {
+                // 模版方法 用class对象产生代理对象
                 return firstInstance((Class) obj);
             }
+            //模版方法
             return nextInstance(obj);
         } catch (RuntimeException e) {
             throw e;
@@ -319,7 +331,7 @@ implements ClassGenerator
                         "Please file an issue at cglib's issue tracker.");
             }
             synchronized (classLoader) {
-              String name = generateClassName(data.getUniqueNamePredicate());              
+              String name = generateClassName(data.getUniqueNamePredicate());
               data.reserveName(name);
               this.setClassName(name);
             }
@@ -332,7 +344,7 @@ implements ClassGenerator
                 }
             }
             //生成字节数组
-            //将执行的权利交给子类
+          // 调用模板方法
             byte[] b = strategy.generate(this);
             String className = ClassNameReader.getClassName(new ClassReader(b));
             ProtectionDomain protectionDomain = getProtectionDomain();

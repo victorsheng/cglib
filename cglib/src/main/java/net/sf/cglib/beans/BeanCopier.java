@@ -100,6 +100,8 @@ abstract public class BeanCopier
         public void generateClass(ClassVisitor v) {
             Type sourceType = Type.getType(source);
             Type targetType = Type.getType(target);
+            //ce class级别的ClassEmitter
+            //e method级别的CLassEmitter
             ClassEmitter ce = new ClassEmitter(v);
             // 创建class
             ce.begin_class(Constants.V1_2,

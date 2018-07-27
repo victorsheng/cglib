@@ -468,7 +468,9 @@ public class Enhancer extends AbstractClassGenerator
     }
 
     private Object createHelper() {
+        //检查
         preValidate();
+        //生成key
         Object key = KEY_FACTORY.newInstance((superclass != null) ? superclass.getName() : null,
                 ReflectUtils.getNames(interfaces),
                 filter == ALL_ZERO ? null : new WeakCacheKey<CallbackFilter>(filter),
@@ -477,6 +479,7 @@ public class Enhancer extends AbstractClassGenerator
                 interceptDuringConstruction,
                 serialVersionUID);
         this.currentKey = key;
+        // 调用AbstractClassGenerator.create(Object)方法
         Object result = super.create(key);
         return result;
     }
@@ -684,6 +687,12 @@ public class Enhancer extends AbstractClassGenerator
         }
     }
 
+    /**
+     * TODO 不是太明白
+     * nextInstance是firstInstance升级版的意义，就是把Constructor缓存起来在每次要实例化时不需要像firstInstance那样调用下面的代码去遍历出Constructor
+     * @param instance
+     * @return
+     */
     protected Object nextInstance(Object instance) {
         EnhancerFactoryData data = (EnhancerFactoryData) instance;
 

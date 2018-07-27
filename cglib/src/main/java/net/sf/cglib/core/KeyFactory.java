@@ -27,6 +27,12 @@ import java.util.Collections;
 import java.util.List;
 
 /**
+ *
+ * 构造工厂时:是传入Key
+ * 工厂newInstance时:传入 source class name + targe class name
+ */
+
+/**
  * Generates classes to handle multi-valued keys, for use in things such as Maps and Sets.
  * Code for <code>equals</code> and <code>hashCode</code> methods follow the
  * the rules laid out in <i>Effective Java</i> by Joshua Bloch. 
@@ -141,6 +147,12 @@ abstract public class KeyFactory {
     protected KeyFactory() {
     }
 
+    /**
+     * 入口方法
+     * @Example: private static final BeanCopierKey KEY_FACTORY =(BeanCopierKey)KeyFactory.create(BeanCopierKey.class);
+     * @param keyInterface
+     * @return
+     */
     public static KeyFactory create(Class keyInterface) {
         return create(keyInterface, null);
     }
